@@ -1,0 +1,25 @@
+name: RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Enable RDP Access
+        run: |
+          net user runneradmin MyStrongPassword123 /add
+          net localgroup administrators runneradmin /add
+          Enable-ComputerRestore -Drive "C:\"
+          vssadmin resize shadowstorage /for=C: /on=C: /maxsize=10%
+          Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+      - name: Keep Alive for 6 Hours
+        run: |
+          for /l %%x in (1, 1, 360) do (
+            echo Running %%x...
+            timeout /t 60
+          )
